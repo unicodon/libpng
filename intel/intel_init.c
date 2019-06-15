@@ -14,7 +14,43 @@
 #include "../pngpriv.h"
 
 #ifdef PNG_READ_SUPPORTED
-#if PNG_INTEL_SSE_IMPLEMENTATION > 0
+#if PNG_INTEL_SSE_IMPLEMENTATION >= 4
+
+void
+png_init_filter_functions_avx2(png_structp pp, unsigned int bpp)
+{
+   /* The techniques used to implement each of these filters in SSE operate on
+    * one pixel at a time.
+    * So they generally speed up 3bpp images about 3x, 4bpp images about 4x.
+    * They can scale up to 6 and 8 bpp images and down to 2 bpp images,
+    * but they'd not likely have any benefit for 1bpp images.
+    * Most of these can be implemented using only MMX and 64-bit registers,
+    * but they end up a bit slower than using the equally-ubiquitous SSE2.
+   */
+   png_debug(1, "in png_init_filter_functions_avx2");
+   if (bpp == 3)
+   {
+      pp->read_filter[PNG_FILTER_VALUE_UP-1] = png_read_filter_row_up_avx2;
+      pp->read_filter[PNG_FILTER_VALUE_SUB-1] = png_read_filter_row_sub3_avx2;
+      pp->read_filter[PNG_FILTER_VALUE_AVG-1] = png_read_filter_row_avg3_avx2;
+      pp->read_filter[PNG_FILTER_VALUE_PAETH-1] =
+         png_read_filter_row_paeth3_avx2;
+   }
+   else if (bpp == 4)
+   {
+      pp->read_filter[PNG_FILTER_VALUE_UP-1] = png_read_filter_row_up_avx2;
+      pp->read_filter[PNG_FILTER_VALUE_SUB-1] = png_read_filter_row_sub4_avx2;
+      pp->read_filter[PNG_FILTER_VALUE_AVG-1] = png_read_filter_row_avg4_avx2;
+      pp->read_filter[PNG_FILTER_VALUE_PAETH-1] =
+          png_read_filter_row_paeth4_avx2;
+   }
+
+   /* No need optimize PNG_FILTER_VALUE_UP.  The compiler should
+    * autovectorize.
+    */
+}
+
+#elif PNG_INTEL_SSE_IMPLEMENTATION > 0
 
 void
 png_init_filter_functions_sse2(png_structp pp, unsigned int bpp)

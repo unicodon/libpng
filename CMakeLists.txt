@@ -135,7 +135,8 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "^i?86" OR
   elseif(NOT ${PNG_INTEL_SSE} STREQUAL "off")
     set(libpng_intel_sources
       intel/intel_init.c
-      intel/filter_sse2_intrinsics.c)
+      intel/filter_sse2_intrinsics.c
+      intel/filter_avx2_intrinsics.c)
     if(${PNG_INTEL_SSE} STREQUAL "on")
       add_definitions(-DPNG_INTEL_SSE_OPT=1)
     endif()
@@ -521,6 +522,12 @@ if(PNG_DEBUG)
   add_definitions(-DPNG_DEBUG)
 endif()
 
+include(CheckCCompilerFlag)
+CHECK_C_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
+if(COMPILER_SUPPORTS_MARCH_NATIVE)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+endif()
+
 # NOW BUILD OUR TARGET
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${ZLIB_INCLUDE_DIR})
 
@@ -843,6 +850,9 @@ if(PNG_SHARED)
     SOVERSION 16
     CLEAN_DIRECT_OUTPUT 1)
 endif()
+
+# Benchmark
+add_subdirectory(benchmark)
 
 # INSTALL
 if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)

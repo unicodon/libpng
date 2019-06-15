@@ -223,7 +223,9 @@
 
 #if PNG_INTEL_SSE_OPT > 0
 #   ifndef PNG_INTEL_SSE_IMPLEMENTATION
-#      if defined(__SSE4_1__) || defined(__AVX__)
+#      if defined(__AVX2__)
+#         define PNG_INTEL_SSE_IMPLEMENTATION 4
+#      elif defined(__SSE4_1__) || defined(__AVX__)
           /* We are not actually using AVX, but checking for AVX is the best
              way we can detect SSE4.1 and SSSE3 on MSVC.
           */
@@ -238,7 +240,9 @@
 #      endif
 #   endif
 
-#   if PNG_INTEL_SSE_IMPLEMENTATION > 0
+#   if PNG_INTEL_SSE_IMPLEMENTATION >= 4
+#      define PNG_FILTER_OPTIMIZATIONS png_init_filter_functions_avx2
+#   elif PNG_INTEL_SSE_IMPLEMENTATION > 0
 #      define PNG_FILTER_OPTIMIZATIONS png_init_filter_functions_sse2
 #   endif
 #else
@@ -1349,7 +1353,22 @@ PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth4_vsx,(png_row_infop
     row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
 #endif
 
-#if PNG_INTEL_SSE_IMPLEMENTATION > 0
+#if PNG_INTEL_SSE_IMPLEMENTATION >= 4
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_up_avx2,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_sub3_avx2,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_sub4_avx2,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_avg3_avx2,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_avg4_avx2,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth3_avx2,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+PNG_INTERNAL_FUNCTION(void,png_read_filter_row_paeth4_avx2,(png_row_infop
+    row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
+#elif PNG_INTEL_SSE_IMPLEMENTATION > 0
 PNG_INTERNAL_FUNCTION(void,png_read_filter_row_sub3_sse2,(png_row_infop
     row_info, png_bytep row, png_const_bytep prev_row),PNG_EMPTY);
 PNG_INTERNAL_FUNCTION(void,png_read_filter_row_sub4_sse2,(png_row_infop
